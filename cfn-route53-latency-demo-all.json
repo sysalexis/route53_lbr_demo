@@ -1,162 +1,62 @@
 {
-  "Mappings": {
-         "AWSRegionToAMI": {
-             "us-east-1": { "AMI": "ami-05355a6c" },
-             "us-west-2": { "AMI": "ami-0358ce33" },
-             "us-west-1": { "AMI": "ami-3ffed17a" },
-             "eu-west-1": { "AMI": "ami-c7c0d6b3" },
-             "ap-southeast-1": { "AMI": "ami-fade91a8" },
-             "ap-northeast-1": { "AMI": "ami-39b23d38" },
-             "ap-southeast-2": { "AMI": "ami-d16bfbeb" },
-             "sa-east-1": { "AMI": "ami-5253894f" }
-         }
-  },
+
   
   "Parameters" : {
 
       "SharedSecret": {
         "Description" : "The IPSec SharedSecret",
-        "Type": "String"
+        "Type": "String",
+		"Default" : "SharedSecret"
       },
       "Username": {
         "Description" : "The VPN username",
-        "Type": "String"
+        "Type": "String",
+		"Default" : "username"
       },
       "Password": {
         "Description" : "The VPN password",
-        "Type": "String"
+        "Type": "String",
+		"Default" : "password"
       },
       "HostedDomain": {
         "Description" : "The hosted domain where we will add DNS records",
-        "Type": "String"
+        "Type": "String",
+		"Default" : "example.com"
       }
 
   },
- 
-  "Resources" : {
   
-      "VPNSecurityGroup" : {
-	        "Type" : "AWS::EC2::SecurityGroup",
-	        "Properties" : {
-	          "GroupDescription" : "VPN Access",
-	          "SecurityGroupIngress" : [ 
-				  { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0"},
-				  { "IpProtocol" : "tcp", "FromPort" : "500", "ToPort" : "500", "CidrIp" : "0.0.0.0/0"},
-				  { "IpProtocol" : "udp", "FromPort" : "500", "ToPort" : "500", "CidrIp" : "0.0.0.0/0"},
-				  { "IpProtocol" : "udp", "FromPort" : "4500", "ToPort" : "4500", "CidrIp" : "0.0.0.0/0"}
-			   ]
-	        }
+  "Resources" : {
+	  "WebStack" : {
+	  	       "Type" : "AWS::CloudFormation::Stack",
+	  	       "Properties" : {
+	  	          "TemplateURL" : "http://s3-eu-west-1.amazonaws.com/aws-emea.info/resources/route53-lbr/cfn-route53-latency-demo-web.json",
+	              "TimeoutInMinutes" : "60",
+				  "Parameters" : {
+				  	"HostedDomain" : {"Ref" : "HostedDomain"}
+				  }
+			   }
 	  },
-	  	  
-	  "WebSecurityGroup" : {
-	        "Type" : "AWS::EC2::SecurityGroup",
-	        "Properties" : {
-	          "GroupDescription" : "Web Access",
-	          "SecurityGroupIngress" : [ 
-				  { "IpProtocol" : "tcp", "FromPort" : "80", "ToPort" : "80", "CidrIp" : "0.0.0.0/0"}
-			   ]
-	        }
-	  },
-
-	  "VPNServer" : {
-	      "Type" : "AWS::EC2::Instance", 
-	      "Properties" : {
-	        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionToAMI", { "Ref" : "AWS::Region" }, "AMI"]},
-	        "InstanceType" : "m1.small",
-	        "SecurityGroups" : [{ "Ref" : "VPNSecurityGroup" }],
-			"KeyName" : "sst-aws",
-			"UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
-						"#!/bin/bash", "\n",
-
-			            "wget -q 'http://aws-emea.info.s3.amazonaws.com/resources/latency-demo/vpn-bootstrap.sh'", "\n",
-						"sed -i -e \"2s/^/IPSEC_PSK=", {"Ref" : "SharedSecret"} ,"\\n/\" vpn-bootstrap.sh", "\n",
-						"sed -i -e \"2s/^/VPN_USER=", {"Ref" : "Username"} ,"\\n/\" vpn-bootstrap.sh", "\n",
-						"sed -i -e \"2s/^/VPN_PASSWORD=", {"Ref" : "Password"} ,"\\n/\" vpn-bootstrap.sh", "\n",
-						". ./vpn-bootstrap.sh", "\n",
-						
-						"curl -X PUT -H 'Content-Type:' --data-binary '{\"Status\" : \"SUCCESS\",",
-						                                               "\"Reason\" : \"The VPN Server is ready\",",
-						                                               "\"UniqueId\" : \"VPNServer\",",
-						                                               "\"Data\" : \"Done\"}' ",
-						                  "\"", {"Ref" : "WaitForVPNWaitHandle"},"\"\n"
-			            ] ] } },		
-			"Tags" : [ {"Key" : "Name", "Value" : "VPNServer"}]								
-	      }
-	  },
-	  
-	  "WebServer" : {
-	      "Type" : "AWS::EC2::Instance", 
-	      "Properties" : {
-	        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionToAMI", { "Ref" : "AWS::Region" }, "AMI"]},
-	        "InstanceType" : "m1.small",
-	        "SecurityGroups" : [{ "Ref" : "WebSecurityGroup" }],
-			"UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
-						"#!/bin/bash\n",
-			            "wget -q -O - 'http://aws-emea.info.s3.amazonaws.com/resources/latency-demo/elb-bootstrap.sh' | sh"
-						] ] } },
-			"Tags" : [ {"Key" : "Name", "Value" : "WebServer"}]								
-	      }
-	  },
-	  
-      "WaitForVPNWaitHandle" : {
-        "Type" : "AWS::CloudFormation::WaitConditionHandle",
-        "Properties" : {
-        }
-      },
-
-      "WaitForVPNServer" : {
-        "Type" : "AWS::CloudFormation::WaitCondition",
-        "DependsOn" : "VPNServer",
-        "Properties" : {
-          "Handle" : {"Ref" : "WaitForVPNWaitHandle"},
-          "Timeout" : "300"
-        }
-      },
-	  
-	  "VPNDNSRecord" : {
-          "Type" : "AWS::Route53::RecordSet",
-          "Properties" : {
-              "HostedZoneName" : { "Fn::Join" : ["", [ {"Ref" : "HostedDomain"}, "."] ]},
-              "Comment" : "CNAME record for VPN Server",
-              "Name" : { "Fn::Join" : ["", [
-				  			"vpn-", 
-							{ "Ref" : "AWS::Region" },
-							".",
-							{"Ref" : "HostedDomain"},
-							"."
-							]]},
-              "Type" : "CNAME",
-              "TTL" : "60",
-              "ResourceRecords" : [{ "Fn::GetAtt" : [ "VPNServer", "PublicDnsName" ] } ]
-          }
-	  },  
-	  "WebDNSRecord" : {
-          "Type" : "AWS::Route53::RecordSet",
-          "Properties" : {
-              "HostedZoneName" : { "Fn::Join" : ["", [ {"Ref" : "HostedDomain"}, "."] ]},
-              "Comment" : "CNAME record for Web Server",
-              "Name" : { "Fn::Join" : ["", [
-				  			"web-", 
-							{ "Ref" : "AWS::Region" },
-							".",
-							{"Ref" : "HostedDomain"},
-							"."
-							]]},
-              "Type" : "CNAME",
-              "TTL" : "60",
-              "ResourceRecords" : [ { "Fn::GetAtt" : [ "WebServer", "PublicDnsName" ] } ]
-          }
-      }	  
-   },
-		
-   "Outputs" : {
-		"VPNServerDNSName" : {
-		      "Description" : "Public DNS name of the newly created VPN Server",
-		      "Value" : { "Fn::GetAtt" : [ "VPNServer", "PublicDnsName" ] }
-		},
-		"WebServerDNSName" : {
-		      "Description" : "Public DNS name of the newly created Web Server",
-		      "Value" : { "Fn::GetAtt" : [ "WebServer", "PublicDnsName" ] }
-		}
-	}	
+	  "VPNStack" : {
+	  	       "Type" : "AWS::CloudFormation::Stack",
+	  	       "Properties" : {
+	  	          "TemplateURL" : "http://s3-eu-west-1.amazonaws.com/aws-emea.info/resources/route53-lbr/cfn-route53-latency-demo-vpn.json",
+	              "TimeoutInMinutes" : "60",
+				  "Parameters" : {
+					 "SharedSecret" : {"Ref" : "SharedSecret"},
+					 "Username" : {"Ref" : "Username"},
+					 "Password" : {"Ref" : "Password"},
+				     "HostedDomain" : {"Ref" : "HostedDomain"}
+				  }
+			   }
+	  }
+  },
+  
+  "Outputs": {
+     "StackRef": {"Value": { "Ref" : "WebStack"}},
+     "WebServerDNSName" : {
+           "Value" : { "Fn::GetAtt" : [ "WebStack", "Outputs.WebServerDNSName" ] }
+     }
+  }  
+  
 }

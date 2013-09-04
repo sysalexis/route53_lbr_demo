@@ -92,13 +92,31 @@ The following scripts are provided to help you to setup this demo :
 
 - cfn-route53-latency-demo-web.json : start and bootstrap a web server
 - cfn-route53-latency-demo-vpn.json : start and bootstrap a VPN server (based on OpenSWAN and xl2tpd)
-- cfn-route53-latency-demo-common.json : the common portion of the above template
-- cfn-route53-latency-demo-all.json : a wrapper template that creates both the web and teh vpn servers
+- cfn-route53-latency-demo-all.json : a wrapper template that creates both the web and the vpn servers
 
 - elb-bootstrap.sh : the web server bootstrap script
 - elb-examplefiles.zip : the web application
 
 - vpn-bootstrap.sh : the VPN server bootstrap script
+
+You can start the complete demo environment by running the follow AWS CLI :
+
+(be sure to have updated ```params.json``` with proper values)
+```
+aws cloudformation  create-stack --stack-name route53-lbr-demo --template-url http://s3-eu-west-1.amazonaws.com/aws-emea.info/resources/route53-lbr/cfn-route53-latency-demo-all.json --parameters file://./params.json --region eu-west-1 --output text
+```
+
+I am usually doing this in two different regions
+
+You can monitor the progress from the console or using the following AWS CLI
+
+```
+aws cloudformation describe-stacks --stack-name route53-lbr-demo --output text
+```
+
+```
+aws cloudformation describe-stack-events --stack-name route53-lbr-demo --output text
+```
 
 ## VPN Configuration
 
