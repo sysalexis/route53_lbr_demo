@@ -54,7 +54,6 @@
 	        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionToAMI", { "Ref" : "AWS::Region" }, "AMI"]},
 	        "InstanceType" : "m1.small",
 	        "SecurityGroups" : [{ "Ref" : "VPNSecurityGroup" }],
-			"KeyName" : "sst-aws",
 			"UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
 						"#!/bin/bash", "\n",
 
