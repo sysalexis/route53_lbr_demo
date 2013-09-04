@@ -90,14 +90,14 @@ This completes the preparation of the demo.
 
 The following scripts are provided to help you to setup this demo :
 
-- cfn-route53-latency-demo-web.json : start and bootstrap a web server
-- cfn-route53-latency-demo-vpn.json : start and bootstrap a VPN server (based on OpenSWAN and xl2tpd)
-- cfn-route53-latency-demo-all.json : a wrapper template that creates both the web and the vpn servers
+- ```cfn-route53-latency-demo-web.json``` : start and bootstrap a web server
+- ```cfn-route53-latency-demo-vpn.json``` : start and bootstrap a VPN server (based on OpenSWAN and xl2tpd)
+- ```cfn-route53-latency-demo-all.json``` : a wrapper template that creates both the web and the vpn servers
 
-- elb-bootstrap.sh : the web server bootstrap script
-- elb-examplefiles.zip : the web application
+- ```elb-bootstrap.sh``` : the web server bootstrap script
+- ```elb-examplefiles.zip``` : the web application
 
-- vpn-bootstrap.sh : the VPN server bootstrap script
+- ```vpn-bootstrap.sh``` : the VPN server bootstrap script
 
 You can start the complete demo environment by running the follow AWS CLI :
 
