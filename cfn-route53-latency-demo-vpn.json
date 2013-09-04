@@ -58,7 +58,7 @@
 			"UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
 						"#!/bin/bash", "\n",
 
-			            "wget -q 'http://aws-emea.info.s3.amazonaws.com/resources/latency-demo/vpn-bootstrap.sh'", "\n",
+			            "wget -q 'http://aws-emea.info.s3.amazonaws.com/resources/route53-lbr/vpn-bootstrap.sh'", "\n",
 						"sed -i -e \"2s/^/IPSEC_PSK=", {"Ref" : "SharedSecret"} ,"\\n/\" vpn-bootstrap.sh", "\n",
 						"sed -i -e \"2s/^/VPN_USER=", {"Ref" : "Username"} ,"\\n/\" vpn-bootstrap.sh", "\n",
 						"sed -i -e \"2s/^/VPN_PASSWORD=", {"Ref" : "Password"} ,"\\n/\" vpn-bootstrap.sh", "\n",

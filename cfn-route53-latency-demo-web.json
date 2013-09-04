@@ -41,7 +41,7 @@
 	        "SecurityGroups" : [{ "Ref" : "WebSecurityGroup" }],
 			"UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
 						"#!/bin/bash\n",
-			            "wget -q -O - 'http://aws-emea.info.s3.amazonaws.com/resources/latency-demo/web-bootstrap.sh' | sh"
+			            "wget -q -O - 'http://aws-emea.info.s3.amazonaws.com/resources/route53-lbr/web-bootstrap.sh' | sh"
 						] ] } },
 			"Tags" : [ {"Key" : "Name", "Value" : "WebServer"}]								
 	      }
