@@ -118,6 +118,12 @@ aws cloudformation describe-stacks --stack-name route53-lbr-demo --output text
 aws cloudformation describe-stack-events --stack-name route53-lbr-demo --output text
 ```
 
+adn be sure to delete all resources at the end of your demo
+
+```
+aws cloudformation delete --stack-name route53-lbr-demo 
+```
+
 ## VPN Configuration
 
 This section describes how to setup a VPN Server and a VPN client.
