@@ -157,7 +157,15 @@ At the end of the execution of the template, you should be able to connect to th
 
 #### Mac OS X
 
+Just configure a VPN (L2TP over IPSec) Interface in Network Preferences.
+
 #### Windows
+
+Configure a VPN Gateway.   
+
+Apparently Windows does not like being behind a NAT device when doing so, so an extra step is mandatory
+[http://support.microsoft.com/kb/926179/en-us](http://support.microsoft.com/kb/926179/en-us)   And reboot your machine !
+
 
 #### Linux
 
