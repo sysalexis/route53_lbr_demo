@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash -x
  
 # Please define your own values for those variables
 # these will be injected into that script by the CFN template bootstrap script
@@ -16,7 +16,20 @@ PRIVATE_IP=`wget -q -O - 'http://instance-data/latest/meta-data/local-ipv4'`
 #
 PUBLIC_IP=`wget -q -O - 'checkip.amazonaws.com'`
  
-yum install -y --enablerepo=epel openswan xl2tpd
+
+# send std out to log file
+exec &>> /home/ec2-user/bootstrap-vpn.log
+
+function error_exit() {
+    echo "{\"Reason\": \"$1\"}"
+    exit $2
+}
+
+RETURN_CODE=$(/usr/bin/yum install -y --enablerepo=epel openswan xl2tpd)
+if [ $RETURN_CODE -ne 0 ]
+then
+    error_exit "yum install openswan xl2tpd failed" $RETURN_CODE
+fi
  
 cat > /etc/ipsec.conf <<EOF
 version 2.0
@@ -112,8 +125,18 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 exit 0
 EOF
  
-service ipsec start
-service xl2tpd start
 chkconfig ipsec on
 chkconfig xl2tpd on
+
+RETURN_CODE=$(service ipsec start)
+if [ $RETURN_CODE -ne 0 ]
+then
+    error_exit "Can not start ipsec" $RETURN_CODE
+fi
+
+RETURN_CODE=$(service xl2tpd start)
+if [ $RETURN_CODE -ne 0 ]
+then
+    error_exit "Can not start xl2tpd" $RETURN_CODE
+fi
 

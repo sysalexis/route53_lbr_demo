@@ -52,6 +52,7 @@
 	      "Type" : "AWS::EC2::Instance", 
 	      "Properties" : {
 	        "ImageId" : { "Fn::FindInMap" : [ "AWSRegionToAMI", { "Ref" : "AWS::Region" }, "AMI"]},
+			"KeyName" : "sst-aws",
 	        "InstanceType" : "m1.small",
 	        "SecurityGroups" : [{ "Ref" : "VPNSecurityGroup" }],
 			"UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
@@ -62,12 +63,7 @@
 						"sed -i -e \"2s/^/VPN_USER=", {"Ref" : "Username"} ,"\\n/\" vpn-bootstrap.sh", "\n",
 						"sed -i -e \"2s/^/VPN_PASSWORD=", {"Ref" : "Password"} ,"\\n/\" vpn-bootstrap.sh", "\n",
 						". ./vpn-bootstrap.sh", "\n",
-						
-						"curl -X PUT -H 'Content-Type:' --data-binary '{\"Status\" : \"SUCCESS\",",
-						                                               "\"Reason\" : \"The VPN Server is ready\",",
-						                                               "\"UniqueId\" : \"VPNServer\",",
-						                                               "\"Data\" : \"Done\"}' ",
-						                  "\"", {"Ref" : "WaitForVPNWaitHandle"},"\"\n"
+						"/opt/aws/bin/cfn-signal -e $? ", { "Fn::Base64" : { "Ref" : "WaitForVPNWaitHandle" }}, "\n"
 			            ] ] } },		
 			"Tags" : [ {"Key" : "Name", "Value" : "VPNServer"}]								
 	      }
