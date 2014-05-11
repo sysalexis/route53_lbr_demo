@@ -40,8 +40,9 @@
 	        "InstanceType" : "m1.small",
 	        "SecurityGroups" : [{ "Ref" : "WebSecurityGroup" }],
 			"UserData" : { "Fn::Base64" : { "Fn::Join" : ["", [
-						"#!/bin/bash\n",
-			            "wget -q -O - 'http://aws-emea.info.s3.amazonaws.com/resources/route53-lbr/web-bootstrap.sh' | sh"
+						"#!/bin/bash", "\n",
+			            "wget -q -O - 'http://aws-emea.info.s3.amazonaws.com/resources/route53-lbr/web-bootstrap.sh' | sh" , "\n",
+	                    "/opt/aws/bin/cfn-signal -e $? ", { "Fn::Base64" : { "Ref" : "WaitForWebServerHandle" }}, "\n"
 						] ] } },
 			"Tags" : [ {"Key" : "Name", "Value" : "WebServer"}]								
 	      }
@@ -63,9 +64,25 @@
               "TTL" : "60",
               "ResourceRecords" : [ { "Fn::GetAtt" : [ "WebServer", "PublicDnsName" ] } ]
           }
-      }	  
-   },
+      },
+	  
+      "WaitForWebServerHandle" : {
+        "Type" : "AWS::CloudFormation::WaitConditionHandle",
+        "Properties" : {
+        }
+      },
+
+      "WaitForWebServer" : {
+        "Type" : "AWS::CloudFormation::WaitCondition",
+        "DependsOn" : "WebServer",
+        "Properties" : {
+          "Handle" : {"Ref" : "WaitForWebServerHandle"},
+          "Timeout" : "300"
+        }
+      }  
 		
+   },
+   
    "Outputs" : {
 		"WebServerDNSName" : {
 		      "Description" : "Public DNS name of the newly created Web Server",
